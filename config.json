@@ -1,0 +1,17 @@
+{
+    "font": "Instrument",
+    "style": "Style 1",
+    "clock_color": "#FFFFFF",
+    "second_hand_color": "#ff4d4d",
+    "use_bg_color": true,
+    "bg_color": "#333333",
+    "use_bg_gradient": false,
+    "bg_gradient_start": "#6a11cb",
+    "bg_gradient_end": "#2575fc",
+    "use_bg_image": false,
+    "bg_image": "",
+    "bg_gallery": [],
+    "use_glassmorphism": true,
+    "bg_opacity": 0.85,
+    "timezone": "UTC"
+}
