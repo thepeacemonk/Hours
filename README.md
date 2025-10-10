@@ -4,7 +4,7 @@
 	Hours
 </h3>
 
-<p align="justify">
+<p align="center">
 Hours is a very simple widget/add-on for Anki that displays your current time, being highly customizable!
 </p>
 
