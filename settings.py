@@ -654,4 +654,3 @@ class SettingsDialog(QDialog):
             mw.deckBrowser.refresh()
             
         self.accept()
-
