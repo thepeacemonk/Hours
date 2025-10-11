@@ -26,5 +26,5 @@ Thanks to the **Anki** and [**Ankimon**](https://github.com/h0tp-ftw/ankimon) co
 I’m actively shipping updates and new features. If my add-ons helped your studies or workflow, consider supporting my work. Your contribution keeps the project maintained and free for everyone.
 
 <a href="https://www.buymeacoffee.com/peacemonk">
-<img width="385" height="75" alt="Buy me an onigiri" src="https://github.com/user-attachments/assets/2c993906-ccb5-4a75-9235-9b63a8d62252" />
+<img width="30%" height="auto" alt="Hours button" src="https://github.com/user-attachments/assets/8f8c03b1-8172-468b-8ffe-259e1f5bc940" />
 </a>
