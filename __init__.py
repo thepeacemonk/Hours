@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# Watch Anki Add-on
+# Hours Anki Add-on
 #
-# Author: Your Name
+# Author: PeaceMonk
 # License: GNU AGPLv3
 #
 # This add-on displays a customizable clock widget on the deck browser screen.
@@ -19,7 +19,7 @@ import aqt.deckbrowser
 from .settings import SettingsDialog
 
 # --- Configuration ---
-ADDON_NAME = "Watch"
+ADDON_NAME = "Hours"
 ADDON_FOLDER = os.path.dirname(__file__)
 CONFIG = mw.addonManager.getConfig(__name__)
 
@@ -164,6 +164,7 @@ def generate_css():
 
             #watch-time {{
                 display: flex;
+                gap: 8px;
             }}
             #watch-minutes-container {{
                 display: flex;
@@ -182,7 +183,7 @@ def generate_css():
                 position: relative;
                 width: 85px;
                 height: 90px;
-                font-size: 70px;
+                font-size: 50px;
                 line-height: 90px;
                 font-weight: bold;
                 border-radius: 8px;
@@ -545,5 +546,4 @@ gui_hooks.theme_did_change.append(on_theme_change)
 action = QAction("Hours Settings", mw)
 action.triggered.connect(show_settings)
 mw.form.menuTools.addAction(action)
-
 
