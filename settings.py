@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Hours Anki Add-on - Settings
 #
 # Author: PeaceMonk
@@ -225,9 +224,9 @@ class SectionGroup(QWidget):
 # --- Main Settings Dialog ---
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent=None, config=None):
+    def __init__(self, parent=None, config=None, addon_package=None):
         super().__init__(parent)
-        self.addon_name = "Hours"
+        self.addon_package = addon_package
         self.config = config
         self.setWindowTitle("Hours Settings")
         
@@ -364,7 +363,7 @@ class SettingsDialog(QDialog):
             button.setCheckable(True)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             
-            if self.config.get("font", "Instrument") == name:
+            if self.config.get("font", "System") == name:
                 button.setChecked(True)
                 
             self.font_button_group.addButton(button)
@@ -646,7 +645,7 @@ class SettingsDialog(QDialog):
                 break
         self.config["bg_image"] = selected_image
         
-        mw.addonManager.writeConfig(self.addon_name, self.config)
+        mw.addonManager.writeConfig(self.addon_package, self.config)
         
         from . import reset_cache
         reset_cache()
@@ -654,3 +653,4 @@ class SettingsDialog(QDialog):
             mw.deckBrowser.refresh()
             
         self.accept()
+
