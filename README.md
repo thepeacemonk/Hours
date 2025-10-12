@@ -8,6 +8,12 @@
 Hours is a very simple widget/add-on for Anki that displays your current time, being highly customizable!
 </p>
 
+### Preview
+
+<img width="80%" height="auto" alt="Onigiri (1)" src="https://github.com/user-attachments/assets/585a30d7-cc2c-44bd-86dc-b5a8a14eaac3" />
+
+
+
 ### License
 
 This project is licensed under the `GNU Affero General Public License v3.0 (AGPL-3.0)`. In short: you’re free to use, study, and modify this code—but if you run it as a service or distribute modified versions, you must make your source available under the same license.
