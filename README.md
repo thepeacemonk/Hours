@@ -9,9 +9,9 @@ Hours is a very simple widget/add-on for Anki that displays your current time, b
 </p>
 
 ### Preview
-
-<img width="80%" height="auto" alt="Onigiri (1)" src="https://github.com/user-attachments/assets/585a30d7-cc2c-44bd-86dc-b5a8a14eaac3" />
-
+<h3 align="center">
+	<img width="80%" height="auto" alt="image (1)" src="https://github.com/user-attachments/assets/c3ca3de3-d945-4438-b4e1-2291df19df26" />
+</h3>
 
 
 ### License
