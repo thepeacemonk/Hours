@@ -9,14 +9,14 @@
 import os
 import json
 import base64
-from datetime import datetime
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from datetime import datetime, timedelta
 
 from aqt import mw, gui_hooks
 from aqt.qt import *
 import aqt.deckbrowser
 
 from .settings import SettingsDialog
+from . import bento_integration
 
 # --- Configuration ---
 ADDON_NAME = "Hours"
@@ -24,7 +24,7 @@ ADDON_FOLDER = os.path.dirname(__file__)
 CONFIG = mw.addonManager.getConfig(__name__)
 
 # --- Helper Functions ---
-def get_font_face_rules():
+def get_font_face_rules(selected_font=None):
     """Generates @font-face rules for the fonts in the web/fonts folder."""
     # Check for both 'web/fonts' and 'fonts' to be more flexible
     possible_dirs = [
@@ -64,6 +64,8 @@ def get_font_face_rules():
             
             # If a matching font family is found, create the @font-face rule for it
             if font_family_name:
+                if selected_font and font_family_name.lower() != selected_font.lower():
+                    continue
                 font_path = os.path.join(fonts_dir, filename).replace("\\", "/")
                 try:
                     with open(font_path, "rb") as f:
@@ -94,13 +96,14 @@ def hex_to_rgba(hex_code, alpha):
 
 
 # --- HTML & CSS Generation ---
-def generate_css():
-    """Generates the complete CSS for the clock widget based on config."""
-    is_dark = mw.pm.night_mode()
-    conf = CONFIG
+def generate_css(is_dark=None, config=None):
+    """Generate production clock CSS with optional preview inputs."""
+    if is_dark is None:
+        is_dark = mw.pm.night_mode()
+    conf = config if isinstance(config, dict) else CONFIG
     
     opacity = conf.get("bg_opacity", 0.85)
-    font = conf.get("font", "Instrument")
+    font = conf.get("font", "System")
     clock_color = conf.get("clock_color", "#FFFFFF")
 
     # Handle system font
@@ -111,6 +114,8 @@ def generate_css():
 
     # Background styles
     background_style = ""
+    pseudo_element_style = ""
+
     if conf.get("use_bg_image", False) and conf.get("bg_image"):
         img_path = os.path.join(ADDON_FOLDER, "user_files", "watch_gallery", conf["bg_image"])
         if os.path.exists(img_path):
@@ -118,7 +123,23 @@ def generate_css():
                 encoded_img = base64.b64encode(f.read()).decode("utf-8")
             ext = os.path.splitext(conf["bg_image"])[1][1:].lower()
             mime_type = f"image/{'gif' if ext == 'gif' else 'png'}"
-            background_style = f"background: url('data:{mime_type};base64,{encoded_img}') center/cover;"
+            image_url = f"data:{mime_type};base64,{encoded_img}"
+
+            # Create the pseudo-element style for the background image
+            pseudo_element_style = f"""
+                #watch-container::before {{
+                    content: '';
+                    position: absolute;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: url('{image_url}') center/cover;
+                    opacity: {opacity};
+                    border-radius: 24px;
+                    z-index: 1;
+                }}
+            """
+            # Ensure the main container itself is transparent
+            background_style = "background-color: transparent;"
+
     elif conf.get("use_bg_gradient", False):
         start = conf.get("bg_gradient_start", "#6a11cb")
         end = conf.get("bg_gradient_end", "#2575fc")
@@ -272,7 +293,8 @@ def generate_css():
         """
 
     return f"""
-        {get_font_face_rules()}
+        {get_font_face_rules(font)}
+        {pseudo_element_style}
         #watch-container {{
             width: 200px;
             height: 200px;
@@ -300,20 +322,19 @@ def generate_css():
             display: flex;
         }}
         {style_css}
+        {bento_integration.sizing_css("#watch-container", "#watch-container", conf)}
     """
 
-def generate_html():
-    """Generates the HTML for the clock, including the JavaScript for time updates."""
-    timezone_str = CONFIG.get("timezone", "UTC")
-    time_format = CONFIG.get("time_format", "24-Hour")
+def generate_html(config=None):
+    """Generate production clock markup with optional in-progress settings."""
+    conf = config if isinstance(config, dict) else CONFIG
+    gmt_offset_hours = conf.get("gmt_offset_hours", 0)
+    # Convert hours to minutes for easier JS handling
+    gmt_offset_minutes = int(gmt_offset_hours * 60)
+    time_format = conf.get("time_format", "24-Hour")
     use_12_hour_js = 'true' if time_format == "12-Hour" else 'false'
-    try:
-        # Validate the timezone identifier
-        ZoneInfo(timezone_str)
-    except ZoneInfoNotFoundError:
-        timezone_str = "UTC" # Fallback if the timezone is invalid
 
-    style = CONFIG.get("style", "Classic")
+    style = conf.get("style", "Classic")
 
     if style != "Flip Clock" and style != "Analog":
         return f"""
@@ -331,26 +352,30 @@ def generate_html():
                     const hoursEl = document.getElementById('watch-hours');
                     const minutesEl = document.getElementById('watch-minutes');
                     const ampmEl = document.getElementById('watch-ampm');
-                    const timezone = "{timezone_str}";
+                    const gmtOffsetMinutes = {gmt_offset_minutes};
                     const use12Hour = {use_12_hour_js};
 
                     function updateClock() {{
                         try {{
                             const now = new Date();
-                            const timeOptions = {{ timeZone: timezone, hour12: use12Hour, hour: '2-digit', minute: '2-digit' }};
-                            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+                            const utc = now.getTime() + (now.getTimezoneOffset() * 60000); // Convert to UTC milliseconds
+                            const localTime = new Date(utc + (gmtOffsetMinutes * 60000)); // Apply GMT offset
 
-                            const timeParts = timeString.split(/:| /); // Split by colon or space
-                            let hours = timeParts[0];
-                            const minutes = timeParts[1];
-                            const ampm = use12Hour ? timeParts[2] : "";
+                            let hours = localTime.getHours();
+                            let minutes = localTime.getMinutes();
+                            let ampm = '';
 
-                            if (!use12Hour && hours === '24') {{
-                                hours = '00';
+                            if (use12Hour) {{
+                                ampm = hours >= 12 ? 'PM' : 'AM';
+                                hours = hours % 12;
+                                hours = hours ? hours : 12; // The hour '0' should be '12'
                             }}
 
-                            if (hoursEl.textContent !== hours) hoursEl.textContent = hours;
-                            if (minutesEl.textContent !== minutes) minutesEl.textContent = minutes;
+                            hours = hours < 10 ? '0' + hours : hours;
+                            minutes = minutes < 10 ? '0' + minutes : minutes;
+
+                            if (hoursEl.textContent !== hours.toString()) hoursEl.textContent = hours.toString();
+                            if (minutesEl.textContent !== minutes.toString()) minutesEl.textContent = minutes.toString();
                             if (use12Hour && ampmEl.textContent !== ampm) ampmEl.textContent = ampm;
 
                         }} catch (e) {{
@@ -373,7 +398,7 @@ def generate_html():
             </div>
             <script>
                 (function() {{
-                    const timezone = "{timezone_str}";
+                    const gmtOffsetMinutes = {gmt_offset_minutes};
                     const use12Hour = {use_12_hour_js};
                     let prevHours = null, prevMinutes = null;
 
@@ -384,16 +409,20 @@ def generate_html():
                         let hours, minutes;
                         try {{
                             const now = new Date();
-                            const timeOptions = {{ timeZone: timezone, hour12: use12Hour, hour: '2-digit', minute: '2-digit' }};
-                            const timeString = now.toLocaleTimeString('en-US', timeOptions);
+                            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                            const localTime = new Date(utc + (gmtOffsetMinutes * 60000));
 
-                            const timeParts = timeString.split(/:| /); // Split by colon or space
-                            hours = timeParts[0];
-                            minutes = timeParts[1];
+                            hours = localTime.getHours();
+                            minutes = localTime.getMinutes();
 
-                            if (!use12Hour && hours === '24') {{
-                                hours = '00';
+                            if (use12Hour) {{
+                                hours = hours % 12;
+                                hours = hours ? hours : 12;
                             }}
+
+                            hours = hours < 10 ? '0' + hours : hours;
+                            minutes = minutes < 10 ? '0' + minutes : minutes;
+
                         }} catch(e) {{
                             hours = 'ER'; minutes = 'TZ'; clearInterval(clockInterval);
                         }}
@@ -442,7 +471,7 @@ def generate_html():
             </div>
             <script>
                 (function() {{
-                    const timezone = "{timezone_str}";
+                    const gmtOffsetMinutes = {gmt_offset_minutes};
                     const analogClock = document.getElementById('analog-clock');
                     const hourHand = document.getElementById('hour-hand');
                     const minuteHand = document.getElementById('minute-hand');
@@ -475,11 +504,12 @@ def generate_html():
                         let now, hours, minutes, seconds;
                         try {{
                             now = new Date();
-                            const timeString = now.toLocaleTimeString('en-US', {{ timeZone: timezone, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }});
-                            const parts = timeString.split(':');
-                            hours = parseInt(parts[0], 10);
-                            minutes = parseInt(parts[1], 10);
-                            seconds = parseInt(parts[2], 10);
+                            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                            const localTime = new Date(utc + (gmtOffsetMinutes * 60000));
+
+                            hours = localTime.getHours();
+                            minutes = localTime.getMinutes();
+                            seconds = localTime.getSeconds();
                             if (hours === 24) hours = 0; // Handle midnight case
                         }} catch (e) {{
                             clearInterval(clockInterval);
@@ -530,10 +560,26 @@ def on_theme_change():
     if mw.state == "deckBrowser":
         mw.deckBrowser.refresh()
 
+
+
+_is_settings_open = False
+def debounce_settings(func):
+    def wrapper(*args, **kwargs):
+        global _is_settings_open
+        if _is_settings_open:
+            return
+        _is_settings_open = True
+        try:
+            return func()
+        finally:
+            _is_settings_open = False
+    return wrapper
+
+@debounce_settings
 def show_settings():
     """Show the settings dialog."""
-    # Pass the add-on's global CONFIG object to the dialog
-    dialog = SettingsDialog(mw, config=CONFIG)
+    # Pass the add-on's global CONFIG object and package name to the dialog
+    dialog = SettingsDialog(mw, config=CONFIG, addon_package=__name__)
     dialog.exec()
 
 # --- Hooks and Menu ---
@@ -542,8 +588,5 @@ gui_hooks.reviewer_will_end.append(reset_cache)
 gui_hooks.sync_did_finish.append(reset_cache)
 gui_hooks.theme_did_change.append(on_theme_change)
 
-# Add menu item
-action = QAction("Hours Settings", mw)
-action.triggered.connect(show_settings)
-mw.form.menuTools.addAction(action)
-
+bento_integration.register_widget("Hours", settings_callback=show_settings)
+bento_integration.add_menu_action("Hours Settings", show_settings)

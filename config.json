@@ -1,6 +1,6 @@
 {
-    "font": "Instrument",
-    "style": "Style 1",
+    "font": "System",
+    "style": "Classic",
     "clock_color": "#FFFFFF",
     "second_hand_color": "#ff4d4d",
     "use_bg_color": true,
@@ -13,5 +13,7 @@
     "bg_gallery": [],
     "use_glassmorphism": true,
     "bg_opacity": 0.85,
-    "timezone": "UTC"
+    "timezone": "UTC",
+    "manual_widget_width": 200,
+    "manual_widget_height": 200
 }

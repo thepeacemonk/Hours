@@ -1,8 +1,9 @@
 {
-  "name": "Hours",
+  "name": "Hours (by Peace)",
+  "package": "691162538",
+  "ankiweb_id": "691162538",
   "author": "PeaceMonk",
-  "version": "V.1.0.0",
+  "version": "v.2.0-bento",
   "homepage": "",
-  "conflicts": [],
-  "mod": 1745007743
+  "conflicts": []
 }
