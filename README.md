@@ -1,18 +1,6 @@
-<h3 align="center">
-  <img width="360" height="112" alt="Hours" src="https://github.com/user-attachments/assets/535f626c-1618-433a-a101-c8b79fccd6e3" />
-	<br>
-	Hours
-</h3>
-
 <p align="center">
-Hours is a very simple widget/add-on for Anki that displays your current time, being highly customizable!
+  <img src=".github/hours_slide.svg" alt="hours_slide" width="100%">
 </p>
-
-### Preview
-<h3 align="center">
-	<img width="80%" height="auto" alt="image (1)" src="https://github.com/user-attachments/assets/c3ca3de3-d945-4438-b4e1-2291df19df26" />
-</h3>
-
 
 ### License
 
@@ -23,14 +11,13 @@ I’ve put a lot of time into designing and maintaining this work. Please respec
 - If you build on it, credit the original and keep your changes open.
 - If you find value here, consider contributing back or supporting the project.
 
-### Gratitude
-
-Thanks to the **Anki** and [**Ankimon**](https://github.com/h0tp-ftw/ankimon) community for teaching me the essentials on coding and add-on development! 
 
 ### Support my work
 
 I’m actively shipping updates and new features. If my add-ons helped your studies or workflow, consider supporting my work. Your contribution keeps the project maintained and free for everyone.
 
+<p align="center">
 <a href="https://www.buymeacoffee.com/peacemonk">
-<img width="30%" height="auto" alt="Hours button" src="https://github.com/user-attachments/assets/8f8c03b1-8172-468b-8ffe-259e1f5bc940" />
+  <img src=".github/hours_bmac.svg" alt="Hours donation button" width="50%">
 </a>
+</p>
